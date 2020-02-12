@@ -1,0 +1,17 @@
+[Unit]
+Description=Terminal over HTTP (%I)
+After=network.target
+
+[Service]
+User=ttyd
+Group=ttyd
+EnvironmentFile=-/etc/ttyd/%i.conf
+ExecStart=/usr/local/bin/ttyd $OPTIONS $COMMAND $COMMAND_ARGS
+Restart=on-failure
+RestartSec=2s
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
