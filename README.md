@@ -28,7 +28,7 @@ Everything was tested on Debian Linux.
 ```
 5. Add a new location in nginx configuration for your domain. If you want to have a shell under `https://example.com/shell`, add this to the `server` section:
 ```
-location ~ /shell(.*)$ {
+location ~ ^\/shell(\/.*)?$ {
   include snippets/shell.conf;
 }
 ```
