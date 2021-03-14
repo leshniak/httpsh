@@ -54,3 +54,6 @@ I recommend to use fail2ban protection and TLS v1.3 for your domain. **DO NOT** 
 
 ## Questions and suggestions
 If you have any questions, please create a new Github issue.
+
+## Sponsorship
+If you appreciate my work, it will be cool to know that I drink my **[coffee ☕](https://www.buymeacoffee.com/leshniak)** thanks to you!
