@@ -1,25 +1,28 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-readonly SCRIPT_NAME=$(basename "$0")
-readonly REMOTE_ADDR="$1"
-readonly HOSTNAME=$(hostname)
-readonly ERROR_LOG="/tmp/$SCRIPT_NAME.$$.stderr"
+script_name=$(basename "$0")
+remote_addr="$1"
+hostname=$(hostname)
+error_pipe="${TMPDIR:-/tmp}/$script_name.$$.pipe"
+error_log="${TMPDIR:-/tmp}/$script_name.$$.stderr"
 
 cleanup() {
-  rm -f "$ERROR_LOG"
+  rm -f -- "$error_pipe" "$error_log"
 }
 
-trap cleanup EXIT
+trap cleanup INT TERM EXIT
 
-[[ ! -z "$REMOTE_ADDR" ]] && echo "Connecting to $HOSTNAME from $REMOTE_ADDR."
+[ ! -z "$remote_addr" ] && echo "Connecting to $hostname from $remote_addr."
 
-read -rp "$HOSTNAME login: " ssh_user
-ssh -o PreferredAuthentications=password -l "$ssh_user" "$HOSTNAME" 2> >(tee -a "$ERROR_LOG" >&2)
+read -rp "$hostname login: " ssh_user
+mkfifo "$error_pipe"
+tee -a "$error_log" < "$error_pipe" >&2 &
+ssh -o PreferredAuthentications=password -l "$ssh_user" "$hostname" 2>"$error_pipe"
 
-failures=$(grep -ic "too many authentication failures" "$ERROR_LOG")
+failures=$(grep -ic "too many authentication failures" "$error_log")
 
-if [[ $failures -gt 0 && ! -z "$REMOTE_ADDR" ]]; then
-  logger -p auth.err -t "$SCRIPT_NAME" "error: maximum authentication attempts exceeded for $ssh_user from $REMOTE_ADDR"
+if [ $failures -gt 0 ] && [ ! -z "$remote_addr" ]; then
+  logger -p auth.err -t "$script_name" "error: maximum authentication attempts exceeded for $ssh_user from $remote_addr"
 fi
 
 sleep 3
