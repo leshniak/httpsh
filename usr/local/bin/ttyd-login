@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 script_name=$(basename "$0")
 remote_addr="$1"
@@ -7,17 +8,20 @@ error_pipe="${TMPDIR:-/tmp}/$script_name.$$.pipe"
 error_log="${TMPDIR:-/tmp}/$script_name.$$.stderr"
 
 cleanup() {
+  trap - TERM
   rm -f -- "$error_pipe" "$error_log"
+  kill -- -$$
 }
 
-trap cleanup INT TERM EXIT
+trap cleanup TERM EXIT
 
 [ ! -z "$remote_addr" ] && echo "Connecting to $hostname from $remote_addr."
 
 read -rp "$hostname login: " ssh_user
+touch "$error_log"
 mkfifo "$error_pipe"
 tee -a "$error_log" < "$error_pipe" >&2 &
-ssh -o PreferredAuthentications=password -l "$ssh_user" "$hostname" 2>"$error_pipe"
+ssh -o PreferredAuthentications=password -l "$ssh_user" "$hostname" 2>"$error_pipe" || true
 
 failures=$(grep -ic "too many authentication failures" "$error_log")
 
