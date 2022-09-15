@@ -10,7 +10,6 @@ error_log="${TMPDIR:-/tmp}/$script_name.$$.stderr"
 cleanup() {
   trap - TERM
   rm -f -- "$error_pipe" "$error_log"
-  kill -- -$$
 }
 
 trap cleanup TERM EXIT
